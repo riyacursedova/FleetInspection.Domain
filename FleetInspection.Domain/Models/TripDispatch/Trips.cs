@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace TripDispatch;
 
-// Зовнішнє повідомлення (контракт для відправки)
+// Зовнішнє повідомлення
 public sealed record TripCompletedMessage(
     Guid MessageId,
     int Version,
@@ -44,7 +44,8 @@ public sealed class Trip(Guid id, Guid inspectionId, Guid vehicleId, int startOd
 
         CompletedEvent = new TripCompletedDomainEvent(
             Guid.NewGuid(), id, inspectionId, vehicleId, endOdometerKm, endFuelPercent, now);
-
+        
+        // Зовнішнє повідомлення контракт v1
         Pending = new TripCompletedMessage(
             MessageId: CompletedEvent.EventId,
             Version: 1,
@@ -63,7 +64,8 @@ public sealed class Trip(Guid id, Guid inspectionId, Guid vehicleId, int startOd
 
     public string PendingJson() =>
         JsonSerializer.Serialize(Pending ?? throw new InvalidOperationException("Немає повідомлення для відправлення."));
-
+    
+    // Очистка черги
     public void Acknowledge(Guid messageId)
     {
         if (Pending?.MessageId != messageId)

@@ -5,6 +5,7 @@ using FleetInspection.Domain.Models.Entities;
 
 namespace FleetInspection.Application.ReadModels;
 
+//  Відображення списку актів диспетчеру
 public sealed record InspectionReadModel(
     Guid InspectionId,
     long Revision,
@@ -17,7 +18,7 @@ public sealed record InspectionReadModel(
 public sealed class InspectionProjector
 {
     private Dictionary<Guid, InspectionReadModel> _rows = new();
-
+    
     public static InspectionReadModel FromAggregate(VehicleInspectionLog log, long revision)
     {
         return new InspectionReadModel(
@@ -30,6 +31,7 @@ public sealed class InspectionProjector
             log.EndFuelLevel?.Percentage);
     }
 
+    // Оновлення проєкції з перевіркою ревізій та захистом від дублікатів
     public void Apply(InspectionReadModel image)
     {
         if (image.Revision < 0)
@@ -44,6 +46,7 @@ public sealed class InspectionProjector
                 return;
             }
 
+            // Дублікат пропускаємо, інший вміст — конфлікт
             if (image.Revision == old.Revision)
             {
                 if (image != old)
@@ -57,6 +60,7 @@ public sealed class InspectionProjector
         _rows[image.InspectionId] = image;
     }
 
+    // Отримання списку актів із фільтрацією за статусом та сортуванням
     public IReadOnlyList<InspectionReadModel> Query(string? status = null)
     {
         var result = new List<InspectionReadModel>();
@@ -73,6 +77,7 @@ public sealed class InspectionProjector
         return result;
     }
 
+    //  Перебудова моделі читання
     public void Rebuild(IEnumerable<InspectionReadModel> currentImages)
     {
         var next = new InspectionProjector();
